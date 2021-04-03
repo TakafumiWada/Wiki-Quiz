@@ -1,13 +1,24 @@
 <template>
   <div class="home">
-    <button @click="getQuestion">取得</button>
-    <div>{{ quizData }}</div>
+    <button @click="clickStartButton">取得</button>
+    <div></div>
+    <div v-if="startQuiz">
+      <div v-if="isLoading"><LoadingComponent /></div>
+      <div v-else><QuizContent /></div>
+    </div>
   </div>
 </template>
 
 <script>
+import LoadingComponent from "@/components/Loading.vue";
+import QuizContent from "@/components/QuizContent.vue";
+
 export default {
   name: "Home",
+  components: {
+    LoadingComponent,
+    QuizContent,
+  },
   data() {
     return {
       quizData: {
@@ -17,9 +28,21 @@ export default {
         keyWord: [],
         categories: [],
       },
+      startQuiz: false,
+      isLoading: true,
     };
   },
   methods: {
+    async clickStartButton() {
+      this.startQuiz = true;
+      this.isLoading = true;
+      while (this.validQuestion()) {
+        await this.getQuestion();
+      }
+      this.isLoading = false;
+      console.log(this.quizData.keyWord);
+      console.log(this.quizData.categories);
+    },
     getQuestion() {
       this.axios({
         url:
@@ -30,10 +53,6 @@ export default {
         this.initData();
         this.setQuizData(res.data);
         this.getKeyWord(this.quizData.text);
-        if (!this.validQuestion()) {
-          this.getQuestion();
-        }
-        console.log(this.quizData);
         console.log(this.quizData.keyWord);
         console.log(this.quizData.categories);
       });
